@@ -3,7 +3,7 @@ from url import URL
 
 def parse_headers():
     headers = {
-        "Connection": "close",
+        "Connection": "keep-alive",
         "User-Agent": "TDX_Net/0.0",
     }
 
