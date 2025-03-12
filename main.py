@@ -17,24 +17,56 @@ def parse_headers():
 
     return headers
 
+def valid_entity(test_entity):
+    valid_entities = [
+        ("&gt;", ">"),
+        ("&lt;", "<")
+    ]
 
-def show(body):
-    in_tag = False
-    for c in body:
-        if c == "<":
-            in_tag = True
-        elif c == ">":
-            in_tag = False
-        elif not in_tag:
-            print(c, end="")
+    for entity_tup in valid_entities: 
+        if test_entity == entity_tup[0]:
+            return entity_tup[1]
+    
+    return False
+
+def show(body, raw):
+    disable_write = False
+    out = ""
+
+    slow = 0
+    for i in range(len(body)):
+        if body[i] in "<>&;" and not raw:
+            if body[i] == "<" or body[i] == "&":
+                slow = i
+                disable_write = True
+                continue
+            
+            # This has a bug if an entity contains a close tag
+            if body[i] == ";":
+                entity = valid_entity(body[slow:i+1])
+                if entity:
+                    out += entity
+                else:
+                    out += body[slow:i+1]
+
+            disable_write = False
+            continue
+            
+        if disable_write: continue
+
+        out += body[i]
+
+    print(out)
 
 def load (url):
     body = url.request()
 
     if "http" in url.scheme:
-        show(body)
+        show(body, url.raw_source)
     elif "file" in url.scheme:
         print(body)
+    elif "data" in url.scheme:
+        show(body, url.mime_type != "text/html")
 
 def main():
     headers = parse_headers()

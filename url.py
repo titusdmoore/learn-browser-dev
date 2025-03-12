@@ -4,6 +4,18 @@ import os
 
 class URL:
     def __init__(self, url, headers):
+        # Data urls must be parsed first since it's a completely different format
+        if "data" in url:
+            self.scheme, url = url.split(":", 1)
+            self.mime_type, self.data_content = url.split(",", 1)
+            return
+
+        if "view-source" in url:
+            _, url = url.split(":", 1)
+            self.raw_source = True
+        else:
+            self.raw_source = False
+
         self.headers = headers
         self.scheme, url = url.split("://", 1)
 
@@ -83,7 +95,10 @@ class URL:
         return "File not found at path: {}".format(self.path)
 
     def handle_data_request(self):
-        print("data request")
+        if self.data_content:
+            return self.data_content
+
+        return "Invalid Data String"
 
     def request(self):
         match self.scheme:
