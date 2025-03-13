@@ -1,6 +1,7 @@
 import sys
 from url import URL
 
+
 def parse_headers():
     headers = {
         "Connection": "keep-alive",
@@ -8,7 +9,8 @@ def parse_headers():
     }
 
     # Protect indexing out of range
-    if len(sys.argv) <= 1: return headers
+    if len(sys.argv) <= 1:
+        return headers
 
     for arg in sys.argv[1:]:
         if ":" in arg:
@@ -17,21 +19,27 @@ def parse_headers():
 
     return headers
 
+
 def valid_entity(test_entity):
     valid_entities = [
         ("&gt;", ">"),
         ("&lt;", "<")
     ]
 
-    for entity_tup in valid_entities: 
+    for entity_tup in valid_entities:
         if test_entity == entity_tup[0]:
             return entity_tup[1]
-    
+
     return False
+
 
 def show(body, raw):
     disable_write = False
     out = ""
+    try:
+        body = body.decode("utf-8")
+    except AttributeError:
+        body = body
 
     slow = 0
     for i in range(len(body)):
@@ -40,7 +48,7 @@ def show(body, raw):
                 slow = i
                 disable_write = True
                 continue
-            
+
             # This has a bug if an entity contains a close tag
             if body[i] == ";":
                 entity = valid_entity(body[slow:i+1])
@@ -51,14 +59,16 @@ def show(body, raw):
 
             disable_write = False
             continue
-            
-        if disable_write: continue
+
+        if disable_write:
+            continue
 
         out += body[i]
 
     print(out)
 
-def load (url):
+
+def load(url):
     body = url.request()
 
     if "http" in url.scheme:
@@ -67,6 +77,7 @@ def load (url):
         print(body)
     elif "data" in url.scheme:
         show(body, url.mime_type != "text/html")
+
 
 def main():
     headers = parse_headers()

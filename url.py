@@ -2,9 +2,11 @@ import socket
 import ssl
 import os
 
+
 class URL:
     def __init__(self, url, headers):
-        # Data urls must be parsed first since it's a completely different format
+        # Data urls must be parsed first since it's
+        # a completely different format
         if "data" in url:
             self.scheme, url = url.split(":", 1)
             self.mime_type, self.data_content = url.split(",", 1)
@@ -25,7 +27,8 @@ class URL:
             if self.scheme == "http":
                 self.port = 80
 
-            # Ensure that the url has a path to prevent undefined behavior in split or headers
+            # Ensure that the url has a path to prevent
+            # undefined behavior in split or headers
             if "/" not in url:
                 url = url + "/"
 
@@ -60,10 +63,10 @@ class URL:
         s.send(request.encode("utf8"))
 
         # Start Handle Response Section
-        response = s.makefile("r", encoding="utf8", newline="\r\n")
+        response = s.makefile("rb", encoding="utf8", newline="\r\n")
 
         statusline = response.readline()
-        version, status, explanation = statusline.split(" ", 2)
+        version, status, explanation = statusline.split(" ".encode("utf-8"), 2)
 
         # Parse Headers
         response_headers = {}
@@ -71,16 +74,21 @@ class URL:
             line = response.readline()
 
             # Reached End of Headers block
-            if line == "\r\n": break
-            header, value = line.split(":", 1)
-            response_headers[header.casefold()] = value.strip()
+            if line == b"\r\n":
+                break
+
+            header, value = line.split(":".encode("utf-8"), 1)
+            response_headers[header.decode(
+                "utf-8").casefold()] = value.decode("utf-8").strip()
 
         assert "transfer-encoding" not in response_headers
         assert "content-encoding" not in response_headers
 
         # Get body of response
-        content = response.read()
-        s.close()
+        content = response.read(int(response_headers["content-length"]))
+
+        if response_headers["connection"] != "keep-alive":
+            s.close()
         # End Handle Response Section
 
         return content
@@ -91,7 +99,7 @@ class URL:
             content = f.read()
             f.close()
             return content
-        
+
         return "File not found at path: {}".format(self.path)
 
     def handle_data_request(self):
@@ -108,4 +116,3 @@ class URL:
                 return self.handle_data_request()
             case _:
                 return self.handle_http_request()
-
