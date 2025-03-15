@@ -81,6 +81,16 @@ class URL:
             response_headers[header.decode(
                 "utf-8").casefold()] = value.decode("utf-8").strip()
 
+        # Handle Redirect Response
+        if b"30" in status and "location" in response_headers.keys():
+            if "://" not in response_headers["location"]:
+                redirect_url = self.scheme + "://" + \
+                    self.host + response_headers["location"]
+            else:
+                redirect_url = response_headers["location"]
+
+            return URL(redirect_url, self.headers).handle_http_request()
+
         assert "transfer-encoding" not in response_headers
         assert "content-encoding" not in response_headers
 
