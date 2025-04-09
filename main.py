@@ -1,5 +1,6 @@
 import sys
 from url import URL
+from cache import Cache
 
 
 def parse_headers():
@@ -81,7 +82,8 @@ def load(url):
 
 def main():
     headers = parse_headers()
-    load(URL(sys.argv[1], headers))
+    cache = Cache()
+    load(URL(sys.argv[1], headers, cache))
 
 
 if __name__ == "__main__":

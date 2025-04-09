@@ -4,7 +4,8 @@ import os
 
 
 class URL:
-    def __init__(self, url, headers):
+    def __init__(self, url, headers, cache):
+        self.cache = cache
         # Data urls must be parsed first since it's
         # a completely different format
         if "data" in url:
